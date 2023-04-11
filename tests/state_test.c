@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////////////
 
 #include "acutest.h"			// Απλή βιβλιοθήκη για unit testing
-
+#include "ADTVector.h"
 #include "state.h"
 
 void test_state_create() {
@@ -19,6 +19,20 @@ void test_state_create() {
 	TEST_ASSERT(info->playing);
 	TEST_ASSERT(!info->paused);
 	TEST_ASSERT(info->score == 0);
+	TEST_ASSERT(info->ball != NULL);
+	TEST_ASSERT(info->ball->rect.x >= 0);
+	TEST_ASSERT(info->ball->rect.x <= 10000);
+	 
+	List result1 = state_objects(state, 0, 10000);
+	TEST_ASSERT(list_size(result1) != 0);
+
+	List result2 = state_objects(state, 0, 100);
+	TEST_ASSERT(list_size(result2) == 0);
+
+	List result3 = state_objects(state, -100000, 100);
+	TEST_ASSERT(list_size(result3) == 0);
+
+	
 
 	// Προσθέστε επιπλέον ελέγχους
 }

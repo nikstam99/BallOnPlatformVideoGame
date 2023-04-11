@@ -118,24 +118,85 @@ State state_create() {
 // Επιστρέφει τις βασικές πληροφορίες του παιχνιδιού στην κατάσταση state
 
 StateInfo state_info(State state) {
-	// Προς υλοποίηση
-	return NULL;
+	return &state->info;
 }
 
 // Επιστρέφει μια λίστα με όλα τα αντικείμενα του παιχνιδιού στην κατάσταση state,
 // των οποίων η συντεταγμένη x είναι ανάμεσα στο x_from και x_to.
 
 List state_objects(State state, float x_from, float x_to) {
-	// Προς υλοποίηση
-	return NULL;
+	List result = list_create(NULL);
+	for (int i = 0; i < vector_size(state->objects); i++) {
+
+		Object obj = vector_get_at(state->objects, i);
+		if(obj->rect.x >= x_from && obj->rect.x <= x_to) 
+			list_insert_next(result, LIST_BOF, obj);
+
+	}
+
+	return result;
 }
 
 // Ενημερώνει την κατάσταση state του παιχνιδιού μετά την πάροδο 1 frame.
 // Το keys περιέχει τα πλήκτρα τα οποία ήταν πατημένα κατά το frame αυτό.
 
 void state_update(State state, KeyState keys) {
-	// Προς υλοποίηση
+	if (state->info.playing) {
+		if (keys->right)
+			state->info.ball->rect.x += 6;
+		else if (keys->left)
+			state->info.ball->rect.x += 1;
+		else 
+			state->info.ball->rect.x += 4;
+		if (state->info.ball->vert_mov == IDLE && keys->up) {
+			state->info.ball->vert_mov = JUMPING;
+			state->info.ball->vert_speed = 17;
+		}
+		else if (state->info.ball->vert_mov == JUMPING) {
+			state->info.ball->rect.y += state->info.ball->vert_speed;
+			state->info.ball->vert_speed -= 85/100 * state->info.ball->vert_speed;
+			if (state->info.ball->vert_speed <= 0.5) 
+				state->info.ball->vert_mov = FALLING;
+		}
+		else if (state->info.ball->vert_mov == FALLING) {
+			state->info.ball->rect.y += state->info.ball->vert_speed;
+			state->info.ball->vert_speed += 10/100 * state->info.ball->vert_speed;
+			if (state->info.ball->vert_speed > 7) 
+				state->info.ball->vert_speed = 7;
+		}
+
+		for (int i = 0; i < vector_size(state->objects); i++) {
+			Object obj = vector_get_at(state->objects, i);
+			if (obj->type == PLATFORM) {
+				if (obj->vert_mov == MOVING_UP) {
+					obj->rect.y += obj->vert_speed;
+					if (obj->rect.y > SCREEN_HEIGHT/4)
+						obj->vert_mov = MOVING_DOWN;
+				}
+				else if (obj->vert_mov == MOVING_DOWN) {
+					obj->rect.y -= obj->vert_speed;
+					if (obj->rect.y < 3*SCREEN_HEIGHT/4)
+						obj->vert_mov = MOVING_UP;
+				}
+				else if (obj->vert_mov == FALLING) {
+					obj->rect.y -= 4;
+				}
+			}
+		}
+
+	} 
+	else if (!state->info.playing && keys->enter) 
+		state_create();
+	else if (state->info.playing && keys->p) {
+		state->info.playing = false;
+		state->info.paused = true;
+	}
+	else if (state->info.paused && keys->n)
+		state_update(state, keys);
 }
+
+	
+
 
 // Καταστρέφει την κατάσταση state ελευθερώνοντας τη δεσμευμένη μνήμη.
 
