@@ -23,7 +23,7 @@ void test_state_create() {
 	TEST_ASSERT(info->ball->rect.x >= 0);
 	TEST_ASSERT(info->ball->rect.x <= 10000);
 	 
-	List result1 = state_objects(state, 0, 10000);
+	List result1 = state_objects(state, 0, SCREEN_WIDTH);
 	TEST_ASSERT(list_size(result1) != 0);
 
 	List result2 = state_objects(state, 0, 100);
@@ -58,6 +58,38 @@ void test_state_update() {
 	new_rect = state_info(state)->ball->rect;
 
 	TEST_CHECK( new_rect.x == old_rect.x + 6 );
+
+	// Με πατημένο το αριστερό βέλος, η μπάλα μετακινείται 1 pixel δεξιά
+	keys.left = true;
+	keys.right = false;
+	old_rect = state_info(state)->ball->rect;
+	state_update(state, &keys);
+	new_rect = state_info(state)->ball->rect;
+	
+	TEST_ASSERT( new_rect.x == old_rect.x + 1);
+
+	// Με πατημένο το πάνω βέλος σε κατάσταση IDLE, η μπάλα μπαίνει σε κατάσταση JUMPING
+	keys.up = true;
+	keys.left = false;
+	state_update(state, &keys);
+	VerticalMovement new_mov = state_info(state)->ball->vert_mov;
+
+	TEST_ASSERT( new_mov == JUMPING );
+
+	// Αν η μπάλα βρίσκεται σε κατάσταση JUMPING, μετακινείται προς τα πάνω όσο η κατακόρυφη ταχύτητητα της
+	old_rect = state_info(state)->ball->rect;
+	state_info(state)->ball->vert_mov = JUMPING;
+	state_update(state, &keys);
+	new_rect = state_info(state)->ball->rect;
+
+	TEST_ASSERT( new_rect.y == old_rect.y + state_info(state)->ball->vert_speed);
+
+	// Αν η μπάλα βρίσκεται σε κατάσταση FALLING, μετακινείται προς τα κάτω όσο η κατακόρυφη ταχύτητητα της
+	
+
+
+	
+
 
 	// Προσθέστε επιπλέον ελέγχους
 }
