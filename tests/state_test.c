@@ -84,11 +84,74 @@ void test_state_update() {
 
 	TEST_ASSERT( new_rect.y == old_rect.y + state_info(state)->ball->vert_speed);
 
-	// Αν η μπάλα βρίσκεται σε κατάσταση FALLING, μετακινείται προς τα κάτω όσο η κατακόρυφη ταχύτητητα της
+	// Αν η μπάλα βρίσκεται σε κατάσταση FALLING, μετακινείται προς τα κάτω όσο η κατακόρυφη ταχύτητητα της,
+	// εκτός αν συγκρουστεί με πλατφόρμα
+	keys.up = false;
+	state_info(state)->ball->vert_mov = FALLING;
+	float speed = state_info(state)->ball->vert_speed;
+	old_rect = state_info(state)->ball->rect;
+	state_update(state, &keys);
+	new_rect = state_info(state)->ball->rect;
+
+	Rectangle obj_rect;
+	Object obj;
+	List list = state_objects(state, 0, SCREEN_WIDTH);
+	bool FLAG = false;
+	for(ListNode node = list_first(list);         
+    node != LIST_EOF;                          
+    node = list_next(list, node)) {
+		obj = list_node_value(list, node);
+		obj_rect = obj->rect;
+		if (CheckCollisionRecs(state_info(state)->ball->rect, obj_rect)) 
+			FLAG = true;
+	}
 	
+	if (FLAG)
+		TEST_ASSERT(new_rect.y == obj_rect.y);
+	else 
+		TEST_ASSERT(new_rect.y == old_rect.y - speed);
+
+	// Αν η μπάλα συγκρουστεί με αστέρι, τότε το score αυξάνεται κατά 10
+	int old_score = state_info(state)->score;
+	state_update(state, &keys);
+	int new_score = state_info(state)->score;
+
+    list = state_objects(state, 0, SCREEN_WIDTH);
+	bool FLAG2 = false;
+	for(ListNode node = list_first(list);         
+    node != LIST_EOF;                          
+    node = list_next(list, node)) {
+		obj = list_node_value(list, node);
+		obj_rect = obj->rect;
+		if (CheckCollisionRecs(state_info(state)->ball->rect, obj_rect)) 
+			FLAG2 = true;
+	}
+
+	if (obj->type == STAR && FLAG2) {
+		TEST_ASSERT(new_score == old_score + 10);
+	}
+
+	// Αν η μπάλα βρίσκεται πάνω σε πλατφόρμα, τότε ακολουθεί το ύψος της πλατφόρμας
+	StateInfo info = state_info(state);
+	state_update(state, &keys);
+	list = state_objects(state, 0, SCREEN_WIDTH);
+	bool FLAG3 = false;
+	for(ListNode node = list_first(list);         
+    node != LIST_EOF;                          
+    node = list_next(list, node)) {
+		obj = list_node_value(list, node);
+		obj_rect = obj->rect;
+		if (info->ball->rect.x >= obj_rect.x 
+			&& info->ball->rect.x <= obj->rect.width + obj->rect.x
+			&& info->ball->rect.y == obj_rect.y) 
+			FLAG3 = true;
+	}
+	if (obj->type == PLATFORM && FLAG3)
+		TEST_ASSERT(state_info(state)->ball->vert_mov == IDLE);
+
+		TEST_ASSERT(state_info(state)->ball->rect.y == obj_rect.y);
 
 
-	
 
 
 	// Προσθέστε επιπλέον ελέγχους

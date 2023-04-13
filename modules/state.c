@@ -141,29 +141,29 @@ List state_objects(State state, float x_from, float x_to) {
 // Το keys περιέχει τα πλήκτρα τα οποία ήταν πατημένα κατά το frame αυτό.
 
 void state_update(State state, KeyState keys) {
-	//float GAME_SPEED = state->speed_factor;
+	float SPEED = 1;
 	if (state->info.playing) {
 		if (keys->right)						// Αν είναι πατημένο το δεξί βελάκι,
-			state->info.ball->rect.x += 6;		// η μπάλα μετακινείται 6 pixels δεξιά.
+			state->info.ball->rect.x += SPEED * 6;		// η μπάλα μετακινείται 6 pixels δεξιά.
 
 		else if (keys->left)					// Αν είναι πατημένο το αριστερό βελάκι,
-			state->info.ball->rect.x += 1;		// η μπάλα μετακινείται 1 pixel δεξιά.
+			state->info.ball->rect.x += SPEED * 1;		// η μπάλα μετακινείται 1 pixel δεξιά.
 
 		else 									// Αν δεν είναι πατημένο κανένα βελάκι,
-			state->info.ball->rect.x += 4;		// η μπάλα μετακινείται 4 pixel δεξιά.
+			state->info.ball->rect.x += SPEED * 4;		// η μπάλα μετακινείται 4 pixel δεξιά.
 
 		if (state->info.ball->vert_mov == IDLE && keys->up) {
 			state->info.ball->vert_mov = JUMPING;
-			state->info.ball->vert_speed = 17;
+			state->info.ball->vert_speed = SPEED * 17;
 		}
 		else if (state->info.ball->vert_mov == JUMPING) {
-			state->info.ball->rect.y += state->info.ball->vert_speed;
+			state->info.ball->rect.y += SPEED * state->info.ball->vert_speed;
 			state->info.ball->vert_speed -= 85/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed <= 0.5) 
 				state->info.ball->vert_mov = FALLING;
 		}
 		else if (state->info.ball->vert_mov == FALLING) {
-			state->info.ball->rect.y -= state->info.ball->vert_speed;
+			state->info.ball->rect.y -= SPEED * state->info.ball->vert_speed;
 			state->info.ball->vert_speed += 10/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed > 7) 
 				state->info.ball->vert_speed = 7;
@@ -173,32 +173,29 @@ void state_update(State state, KeyState keys) {
 			Object obj = vector_get_at(state->objects, i);
 			if (obj->type == PLATFORM) {
 				if (obj->vert_mov == MOVING_UP) {
-					obj->rect.y += obj->vert_speed;
+					obj->rect.y += SPEED * obj->vert_speed;
 					if (obj->rect.y > SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_DOWN;
 				}
 				else if (obj->vert_mov == MOVING_DOWN) {
-					obj->rect.y -= obj->vert_speed;
+					obj->rect.y -= SPEED * obj->vert_speed;
 					if (obj->rect.y < 3*SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_UP;
 				}
 				else if (obj->vert_mov == FALLING) {
-					obj->rect.y -= 4;
+					obj->rect.y -= SPEED * 4;
 				}
 				if (state->info.ball->vert_mov == IDLE) {
 					if (state->info.ball->rect.x >= obj->rect.x 
-					    && state->info.ball->rect.x <= obj->rect.width
+					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x 
 					    && state->info.ball->rect.y == obj->rect.y) 
-						state->info.ball->vert_mov = obj->vert_mov;
+						state->info.ball->rect.y = obj->rect.y;
 
 					else {
 						state->info.ball->vert_mov = FALLING;
-						state->info.ball->vert_speed = 1.5;
+						state->info.ball->vert_speed = SPEED * 1.5;
 					}
 				}
-				
-						
-				
 			}
 		}
 		int i = 0;
