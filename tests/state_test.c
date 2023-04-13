@@ -147,9 +147,9 @@ void test_state_update() {
 			&& info->ball->rect.y == obj_rect.y) 
 			FLAG3 = true;
 	}
-	if (obj->type == PLATFORM && FLAG3)
+	if (obj->type == PLATFORM && FLAG3) {
 		TEST_ASSERT(state_info(state)->ball->vert_mov == IDLE);
-
+	}
 		TEST_ASSERT(state_info(state)->ball->rect.y == obj_rect.y);
 
 
