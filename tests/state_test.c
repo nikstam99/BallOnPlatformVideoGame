@@ -8,6 +8,7 @@
 #include "ADTVector.h"
 #include "state.h"
 
+
 void test_state_create() {
 
 	State state = state_create();
