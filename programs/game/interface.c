@@ -6,7 +6,7 @@
 Texture ball_img;
 
 void interface_init() {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "game.c");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "game");
     SetTargetFPS(60);
 
     //Φόρτωση εικόνων
@@ -28,5 +28,5 @@ void interface_draw_frame(State state){
     StateInfo info = state_info(state);
 
     DrawTexture(ball_img, SCREEN_WIDTH - 700, info->ball->rect.y, WHITE);
-
+    EndDrawing();
 }
