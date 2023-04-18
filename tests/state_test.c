@@ -79,11 +79,12 @@ void test_state_update() {
 
 	// Αν η μπάλα βρίσκεται σε κατάσταση JUMPING, μετακινείται προς τα πάνω όσο η κατακόρυφη ταχύτητητα της
 	old_rect = state_info(state)->ball->rect;
+	float old_speed = state_info(state)->ball->vert_speed;
 	state_info(state)->ball->vert_mov = JUMPING;
 	state_update(state, &keys);
 	new_rect = state_info(state)->ball->rect;
 
-	TEST_ASSERT( new_rect.y == old_rect.y + state_info(state)->ball->vert_speed);
+	TEST_ASSERT( new_rect.y == old_rect.y + old_speed);
 
 	// Αν η μπάλα βρίσκεται σε κατάσταση FALLING, μετακινείται προς τα κάτω όσο η κατακόρυφη ταχύτητητα της,
 	// εκτός αν συγκρουστεί με πλατφόρμα
