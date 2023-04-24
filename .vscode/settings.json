@@ -30,6 +30,7 @@
 	},
 	"files.associations": {
 		"adtvector.h": "c",
-		"state.h": "c"
+		"state.h": "c",
+		"raylib.h": "c"
 	},
 }

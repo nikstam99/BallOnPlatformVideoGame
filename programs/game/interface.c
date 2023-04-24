@@ -1,5 +1,6 @@
-#include "state.h"
 #include "raylib.h"
+
+#include "state.h"
 #include "interface.h"
 
 //Assets
