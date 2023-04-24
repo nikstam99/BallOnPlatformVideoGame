@@ -29,5 +29,18 @@ void interface_draw_frame(State state){
     StateInfo info = state_info(state);
 
     DrawTexture(ball_img, SCREEN_WIDTH - 700, info->ball->rect.y, WHITE);
+
+    // Σχεδιάζουμε το σκορ και το FPS counter
+	DrawText(TextFormat("%04i", info->score), 20, 20, 40, GRAY);
+	DrawFPS(SCREEN_WIDTH - 80, 0);
+
+	// Αν το παιχνίδι έχει τελειώσει, σχεδιάζομαι το μήνυμα για να ξαναρχίσει
+	if (!info->playing) {
+		DrawText(
+			" GAME OVER | PRESS [ENTER] TO PLAY AGAIN",
+			 GetScreenWidth() / 2 - MeasureText("GAME OVER | PRESS [ENTER] TO PLAY AGAIN", 20) / 2,
+			 GetScreenHeight() / 2 - 50, 20, GRAY
+		);
+	}
     EndDrawing();
 }
