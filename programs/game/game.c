@@ -7,7 +7,16 @@
 State state;
 
 void update_and_draw() {
-	//state_update(state);
+
+	struct key_state keys;
+	keys.left = IsKeyDown(KEY_LEFT);
+	keys.right = IsKeyDown(KEY_RIGHT);
+	keys.up = IsKeyDown(KEY_UP);
+	keys.down = IsKeyDown(KEY_DOWN);
+	keys.p = IsKeyDown(KEY_P);
+	keys.enter = IsKeyDown(KEY_ENTER);
+	keys.n = IsKeyDown(KEY_N);
+	state_update(state, &keys);
 	interface_draw_frame(state);
 }
 

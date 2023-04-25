@@ -143,27 +143,28 @@ List state_objects(State state, float x_from, float x_to) {
 void state_update(State state, KeyState keys) {
 	float SPEED = state->speed_factor;
 	if (state->info.playing) {
+		
 		if (keys->right)						// Αν είναι πατημένο το δεξί βελάκι,
 			state->info.ball->rect.x += 6;		// η μπάλα μετακινείται 6 pixels δεξιά.
 
 		else if (keys->left)					// Αν είναι πατημένο το αριστερό βελάκι,
 			state->info.ball->rect.x += 1;		// η μπάλα μετακινείται 1 pixel δεξιά.
 
-		else 									// Αν δεν είναι πατημένο κανένα βελάκι,
-			state->info.ball->rect.x += 4;		// η μπάλα μετακινείται 4 pixel δεξιά.
+		else if (!keys->left && !keys->right)									// Αν δεν είναι πατημένο κανένα βελάκι,
+			state->info.ball->rect.x += 0;		// η μπάλα μετακινείται 4 pixel δεξιά.
 
 		if (state->info.ball->vert_mov == IDLE && keys->up) {
 			state->info.ball->vert_mov = JUMPING;
 			state->info.ball->vert_speed = SPEED * 17;
 		}
 		else if (state->info.ball->vert_mov == JUMPING) {
-			state->info.ball->rect.y += state->info.ball->vert_speed;
+			state->info.ball->rect.y -= state->info.ball->vert_speed;
 			state->info.ball->vert_speed -= SPEED * 85/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed <= 0.5) 
 				state->info.ball->vert_mov = FALLING;
 		}
 		else if (state->info.ball->vert_mov == FALLING) {
-			state->info.ball->rect.y -= state->info.ball->vert_speed;
+			state->info.ball->rect.y += state->info.ball->vert_speed;
 			state->info.ball->vert_speed += SPEED * 10/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed > 7) 
 				state->info.ball->vert_speed = SPEED * 7;
@@ -173,17 +174,17 @@ void state_update(State state, KeyState keys) {
 			Object obj = vector_get_at(state->objects, i);
 			if (obj->type == PLATFORM) {
 				if (obj->vert_mov == MOVING_UP) {
-					obj->rect.y += obj->vert_speed;
+					obj->rect.y -= obj->vert_speed;
 					if (obj->rect.y > SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_DOWN;
 				}
 				else if (obj->vert_mov == MOVING_DOWN) {
-					obj->rect.y -= obj->vert_speed;
+					obj->rect.y += obj->vert_speed;
 					if (obj->rect.y < 3*SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_UP;
 				}
 				else if (obj->vert_mov == FALLING) {
-					obj->rect.y -= 4;
+					obj->rect.y += 4;
 				}
 				if (state->info.ball->vert_mov == IDLE) {
 					if (state->info.ball->rect.x >= obj->rect.x 
@@ -208,16 +209,15 @@ void state_update(State state, KeyState keys) {
 					vector_remove_last(state->objects);
 					state->info.score += 10;
 				}
-			if (obj->type == PLATFORM && obj->rect.y == -SCREEN_HEIGHT) {
+			if (obj->type == PLATFORM && obj->rect.y == SCREEN_HEIGHT) {
 					Object swap = vector_get_at(state->objects, vector_size(state->objects) - 1);
 					vector_set_at(state->objects, i, swap);
 					vector_remove_last(state->objects);
 			}
 			if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
-				&& state->info.ball->vert_mov == FALLING
 				&& obj->type == PLATFORM) {
 					state->info.ball->vert_mov = IDLE;
-					state->info.ball->rect.y = obj->rect.y;
+					state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
 					}
 			i++;
 		}
@@ -231,18 +231,22 @@ void state_update(State state, KeyState keys) {
 			add_objects(state, last_platform->rect.x);
 			state->speed_factor += 10/100 * state->speed_factor;
 		}
-		if (state->info.ball->rect.y == -SCREEN_HEIGHT) 
+		if (state->info.ball->rect.y >= SCREEN_HEIGHT) {
 			state->info.playing = false;
+		}
+			
 		
 	} 
-	else if (!state->info.playing && keys->enter) 
-		state_create();
-	else if (state->info.playing && keys->p) {
+	if (!state->info.playing && keys->enter) {
+		state = state_create();
+	}
+	if (state->info.playing && keys->p) {
 		state->info.playing = false;
 		state->info.paused = true;
 	}
-	else if (state->info.paused && keys->n)
+	if (state->info.paused && keys->n) {
 		state_update(state, keys);
+	}
 }
 
 	

@@ -84,7 +84,7 @@ void test_state_update() {
 	state_update(state, &keys);
 	new_rect = state_info(state)->ball->rect;
 
-	TEST_ASSERT( new_rect.y == old_rect.y + old_speed);
+	TEST_ASSERT( new_rect.y == old_rect.y - old_speed);
 
 	// Αν η μπάλα βρίσκεται σε κατάσταση FALLING, μετακινείται προς τα κάτω όσο η κατακόρυφη ταχύτητητα της,
 	// εκτός αν συγκρουστεί με πλατφόρμα
@@ -111,7 +111,7 @@ void test_state_update() {
 	if (FLAG)
 		TEST_ASSERT(new_rect.y == obj_rect.y);
 	else 
-		TEST_ASSERT(new_rect.y == old_rect.y - speed);
+		TEST_ASSERT(new_rect.y == old_rect.y + speed);
 
 	// Αν η μπάλα συγκρουστεί με αστέρι, τότε το score αυξάνεται κατά 10
 	int old_score = state_info(state)->score;
