@@ -55,7 +55,7 @@ void interface_draw_frame(State state){
 	DrawFPS(SCREEN_WIDTH - 80, 0);
 
 	// Αν το παιχνίδι έχει τελειώσει, σχεδιάζουμε το μήνυμα για να ξαναρχίσει
-	if (!info->playing) {
+	if (!info->playing && !info->paused) {
 		DrawText(
 			" GAME OVER | PRESS [ENTER] TO PLAY AGAIN",
 			 GetScreenWidth() / 2 - MeasureText("GAME OVER | PRESS [ENTER] TO PLAY AGAIN", 20) / 2,
@@ -64,8 +64,8 @@ void interface_draw_frame(State state){
 	}
     if (info->paused) {
         DrawText(
-			" PAUSED ",
-			 GetScreenWidth() / 2 - MeasureText("PAUSED", 20) / 2,
+			" PAUSED | PRESS [ENTER] TO CONTINUE",
+			 GetScreenWidth() / 2 - MeasureText(" PAUSED | PRESS [ENTER] TO CONTINUE", 20) / 2,
 			 GetScreenHeight() / 2 - 50, 20, GRAY
 		);
     }

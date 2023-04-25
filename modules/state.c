@@ -155,7 +155,7 @@ void state_update(State state, KeyState keys) {
 
 		if (state->info.ball->vert_mov == IDLE && keys->up) {
 			state->info.ball->vert_mov = JUMPING;
-			state->info.ball->vert_speed = SPEED * 17;
+			state->info.ball->vert_speed = SPEED * 157;
 		}
 		else if (state->info.ball->vert_mov == JUMPING) {
 			state->info.ball->rect.y -= state->info.ball->vert_speed;
@@ -173,22 +173,24 @@ void state_update(State state, KeyState keys) {
 		for (int i = 0; i < vector_size(state->objects); i++) {
 			Object obj = vector_get_at(state->objects, i);
 			if (obj->type == PLATFORM) {
+				if (obj->unstable == true) {
 				if (obj->vert_mov == MOVING_UP) {
 					obj->rect.y -= obj->vert_speed;
-					if (obj->rect.y > SCREEN_HEIGHT/4)
+					if (obj->rect.y >= SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_DOWN;
 				}
 				else if (obj->vert_mov == MOVING_DOWN) {
 					obj->rect.y += obj->vert_speed;
-					if (obj->rect.y < 3*SCREEN_HEIGHT/4)
+					if (obj->rect.y <= 3*SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_UP;
 				}
 				else if (obj->vert_mov == FALLING) {
 					obj->rect.y += 4;
 				}
+				}
 				if (state->info.ball->vert_mov == IDLE) {
 					if (state->info.ball->rect.x >= obj->rect.x 
-					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x 
+					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x
 					    && state->info.ball->rect.y == obj->rect.y) 
 						state->info.ball->rect.y = obj->rect.y;
 
@@ -209,7 +211,7 @@ void state_update(State state, KeyState keys) {
 					vector_remove_last(state->objects);
 					state->info.score += 10;
 				}
-			if (obj->type == PLATFORM && obj->rect.y == SCREEN_HEIGHT) {
+			if (obj->type == PLATFORM && obj->rect.y >= SCREEN_HEIGHT) {
 					Object swap = vector_get_at(state->objects, vector_size(state->objects) - 1);
 					vector_set_at(state->objects, i, swap);
 					vector_remove_last(state->objects);
@@ -237,16 +239,18 @@ void state_update(State state, KeyState keys) {
 			
 		
 	} 
-	if (!state->info.playing && keys->enter) {
-		state = state_create();
-	}
 	if (state->info.playing && keys->p) {
 		state->info.playing = false;
 		state->info.paused = true;
 	}
+	if (keys->enter && state->info.paused){
+		state->info.playing = true;
+		state->info.paused = false;
+	}
 	if (state->info.paused && keys->n) {
 		state_update(state, keys);
 	}
+	
 }
 
 	

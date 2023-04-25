@@ -16,6 +16,13 @@ void update_and_draw() {
 	keys.p = IsKeyDown(KEY_P);
 	keys.enter = IsKeyDown(KEY_ENTER);
 	keys.n = IsKeyDown(KEY_N);
+	if (!state_info(state)->playing && keys.enter && !state_info(state)->paused) {
+		state = state_create();
+	}
+	else if (state_info(state)->paused && keys.enter) {
+		state_info(state)->playing = false;
+		state_info(state)->paused = true;
+	}
 	state_update(state, &keys);
 	interface_draw_frame(state);
 }
