@@ -5,9 +5,8 @@
 
 //Assets
 Texture ball_img;
-Texture platform_img;
 Texture star_img;
-Texture plat2_img;
+
 
 void interface_init() {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "game");
@@ -15,9 +14,8 @@ void interface_init() {
 
     //Φόρτωση εικόνων
     ball_img = LoadTextureFromImage(LoadImage("assets/ball-removebg-preview.png"));
-    platform_img = LoadTextureFromImage(LoadImage("assets/platform (1).png"));
     star_img = LoadTextureFromImage(LoadImage("assets/star-removebg-preview.png"));
-    plat2_img = LoadTextureFromImage(LoadImage("assets/lava.png"));
+    
 }
 
 void interface_close() {
@@ -46,14 +44,14 @@ void interface_draw_frame(State state){
          node = list_next(objs, node)) {
                 Object obj = list_node_value(objs, node);
                  if (obj->type == PLATFORM && !obj->unstable)
-                 DrawTexture(platform_img, obj->rect.x + x_offset, obj->rect.y, WHITE);
+                 //DrawTexture(platform_img, obj->rect.x + x_offset, obj->rect.y, WHITE);
+                 DrawRectangle(obj->rect.x + x_offset, obj->rect.y, obj->rect.width, obj->rect.height, BLUE);
                  else if (obj->type == STAR) 
                  DrawTexture(star_img, obj->rect.x + x_offset, obj->rect.y, WHITE);
                  else if (obj->unstable) 
-                  DrawTexture(plat2_img, obj->rect.x + x_offset, obj->rect.y, WHITE);
+                 DrawRectangle(obj->rect.x + x_offset, obj->rect.y, obj->rect.width, obj->rect.height,  RED);
 
          }
-
     // Σχεδιάζουμε το σκορ και το FPS counter
 	DrawText(TextFormat("%04i", info->score), 20, 20, 40, RED);
 	DrawFPS(SCREEN_WIDTH - 80, 0);

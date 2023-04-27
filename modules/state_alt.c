@@ -1,10 +1,10 @@
+
 #include <stdlib.h>
 
 #include "ADTVector.h"
 #include "ADTList.h"
 #include "state.h"
 
-#include "ADTSet.h"
 
 // Οι ολοκληρωμένες πληροφορίες της κατάστασης του παιχνιδιού.
 // Ο τύπος State είναι pointer σε αυτό το struct, αλλά το ίδιο το struct
@@ -16,9 +16,6 @@ struct state {
 	float speed_factor;		// Πολλαπλασιαστής ταχύτητς (1 = κανονική ταχύτητα, 2 = διπλάσια, κλπ)
 };
 
-int compare_ints(Pointer a, Pointer b){
-    return *(int*)a - *(int*)b;
-}
 
 // Δημιουργεί και επιστρέφει ένα αντικείμενο
 
@@ -124,11 +121,18 @@ StateInfo state_info(State state) {
 	return &state->info;
 }
 
-// Επιστρέφει ένα set με όλα τα αντικείμενα του παιχνιδιού στην κατάσταση state,
+// Επιστρέφει μια λίστα με όλα τα αντικείμενα του παιχνιδιού στην κατάσταση state,
 // των οποίων η συντεταγμένη x είναι ανάμεσα στο x_from και x_to.
 
-Set state_objects(State state, float x_from, float x_to) {
-	Set result = set_create(compare_ints, NULL);
+List state_objects(State state, float x_from, float x_to) {
+	List result = list_create(NULL);
+	for (int i = 0; i < vector_size(state->objects); i++) {
+
+		Object obj = vector_get_at(state->objects, i);
+		if(obj->rect.x >= x_from && obj->rect.x <= x_to) 
+			list_insert_next(result, LIST_BOF, obj);
+
+	}
 
 	return result;
 }
@@ -137,53 +141,55 @@ Set state_objects(State state, float x_from, float x_to) {
 // Το keys περιέχει τα πλήκτρα τα οποία ήταν πατημένα κατά το frame αυτό.
 
 void state_update(State state, KeyState keys) {
-	float SPEED = 1;
+	float SPEED = state->speed_factor;
 	if (state->info.playing) {
+		
 		if (keys->right)						// Αν είναι πατημένο το δεξί βελάκι,
-			state->info.ball->rect.x += SPEED * 6;		// η μπάλα μετακινείται 6 pixels δεξιά.
+			state->info.ball->rect.x += 6;		// η μπάλα μετακινείται 6 pixels δεξιά.
 
 		else if (keys->left)					// Αν είναι πατημένο το αριστερό βελάκι,
-			state->info.ball->rect.x += SPEED * 1;		// η μπάλα μετακινείται 1 pixel δεξιά.
+			state->info.ball->rect.x += 1;		// η μπάλα μετακινείται 1 pixel δεξιά.
 
-		else 									// Αν δεν είναι πατημένο κανένα βελάκι,
-			state->info.ball->rect.x += SPEED * 4;		// η μπάλα μετακινείται 4 pixel δεξιά.
+		else if (!keys->left && !keys->right)									// Αν δεν είναι πατημένο κανένα βελάκι,
+			state->info.ball->rect.x += 4;		// η μπάλα μετακινείται 4 pixel δεξιά.
 
 		if (state->info.ball->vert_mov == IDLE && keys->up) {
 			state->info.ball->vert_mov = JUMPING;
 			state->info.ball->vert_speed = SPEED * 17;
 		}
 		else if (state->info.ball->vert_mov == JUMPING) {
-			state->info.ball->rect.y += SPEED * state->info.ball->vert_speed;
-			state->info.ball->vert_speed -= 85/100 * state->info.ball->vert_speed;
+			state->info.ball->rect.y -= state->info.ball->vert_speed;
+			state->info.ball->vert_speed = SPEED * 85/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed <= 0.5) 
 				state->info.ball->vert_mov = FALLING;
 		}
 		else if (state->info.ball->vert_mov == FALLING) {
-			state->info.ball->rect.y -= SPEED * state->info.ball->vert_speed;
-			state->info.ball->vert_speed += 10/100 * state->info.ball->vert_speed;
+			state->info.ball->rect.y += state->info.ball->vert_speed;
+			state->info.ball->vert_speed += SPEED * 10/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed > 7) 
-				state->info.ball->vert_speed = 7;
+				state->info.ball->vert_speed = SPEED * 7;
 		}
 
 		for (int i = 0; i < vector_size(state->objects); i++) {
 			Object obj = vector_get_at(state->objects, i);
 			if (obj->type == PLATFORM) {
 				if (obj->vert_mov == MOVING_UP) {
-					obj->rect.y += SPEED * obj->vert_speed;
-					if (obj->rect.y > SCREEN_HEIGHT/4)
+					obj->rect.y -= obj->vert_speed;
+					if (obj->rect.y <= SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_DOWN;
 				}
 				else if (obj->vert_mov == MOVING_DOWN) {
-					obj->rect.y -= SPEED * obj->vert_speed;
-					if (obj->rect.y < 3*SCREEN_HEIGHT/4)
+					obj->rect.y += obj->vert_speed;
+					if (obj->rect.y >= 3*SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_UP;
 				}
 				else if (obj->vert_mov == FALLING) {
-					obj->rect.y -= SPEED * 4;
+					obj->rect.y += 4;
 				}
+				
 				if (state->info.ball->vert_mov == IDLE) {
 					if (state->info.ball->rect.x >= obj->rect.x 
-					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x 
+					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x
 					    && state->info.ball->rect.y == obj->rect.y) 
 						state->info.ball->rect.y = obj->rect.y;
 
@@ -204,16 +210,18 @@ void state_update(State state, KeyState keys) {
 					vector_remove_last(state->objects);
 					state->info.score += 10;
 				}
-			if (obj->type == PLATFORM && obj->rect.y == -SCREEN_HEIGHT) {
+			if (obj->type == PLATFORM && obj->rect.y >= SCREEN_HEIGHT) {
 					Object swap = vector_get_at(state->objects, vector_size(state->objects) - 1);
 					vector_set_at(state->objects, i, swap);
 					vector_remove_last(state->objects);
 			}
 			if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
-				&& state->info.ball->vert_mov == FALLING
 				&& obj->type == PLATFORM) {
 					state->info.ball->vert_mov = IDLE;
-					state->info.ball->rect.y = obj->rect.y;
+					state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
+					if (obj->unstable) {
+						obj->vert_mov = FALLING;
+					}
 					}
 			i++;
 		}
@@ -227,18 +235,24 @@ void state_update(State state, KeyState keys) {
 			add_objects(state, last_platform->rect.x);
 			state->speed_factor += 10/100 * state->speed_factor;
 		}
-		if (state->info.ball->rect.y == -SCREEN_HEIGHT) 
+		if (state->info.ball->rect.y >= SCREEN_HEIGHT) {
 			state->info.playing = false;
+		}
+			
 		
 	} 
-	else if (!state->info.playing && keys->enter) 
-		state_create();
-	else if (state->info.playing && keys->p) {
+	if (state->info.playing && keys->p) {
 		state->info.playing = false;
 		state->info.paused = true;
 	}
-	else if (state->info.paused && keys->n)
+	if (keys->enter && state->info.paused){
+		state->info.playing = true;
+		state->info.paused = false;
+	}
+	if (state->info.paused && keys->n) {
 		state_update(state, keys);
+	}
+	
 }
 
 	
