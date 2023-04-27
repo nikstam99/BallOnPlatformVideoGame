@@ -151,15 +151,15 @@ void state_update(State state, KeyState keys) {
 			state->info.ball->rect.x += 1;		// η μπάλα μετακινείται 1 pixel δεξιά.
 
 		else if (!keys->left && !keys->right)									// Αν δεν είναι πατημένο κανένα βελάκι,
-			state->info.ball->rect.x += 0;		// η μπάλα μετακινείται 4 pixel δεξιά.
+			state->info.ball->rect.x += 4;		// η μπάλα μετακινείται 4 pixel δεξιά.
 
 		if (state->info.ball->vert_mov == IDLE && keys->up) {
 			state->info.ball->vert_mov = JUMPING;
-			state->info.ball->vert_speed = SPEED * 157;
+			state->info.ball->vert_speed = SPEED * 17;
 		}
 		else if (state->info.ball->vert_mov == JUMPING) {
 			state->info.ball->rect.y -= state->info.ball->vert_speed;
-			state->info.ball->vert_speed -= SPEED * 85/100 * state->info.ball->vert_speed;
+			state->info.ball->vert_speed = SPEED * 85/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed <= 0.5) 
 				state->info.ball->vert_mov = FALLING;
 		}
@@ -173,21 +173,20 @@ void state_update(State state, KeyState keys) {
 		for (int i = 0; i < vector_size(state->objects); i++) {
 			Object obj = vector_get_at(state->objects, i);
 			if (obj->type == PLATFORM) {
-				if (obj->unstable == true) {
 				if (obj->vert_mov == MOVING_UP) {
 					obj->rect.y -= obj->vert_speed;
-					if (obj->rect.y >= SCREEN_HEIGHT/4)
+					if (obj->rect.y <= SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_DOWN;
 				}
 				else if (obj->vert_mov == MOVING_DOWN) {
 					obj->rect.y += obj->vert_speed;
-					if (obj->rect.y <= 3*SCREEN_HEIGHT/4)
+					if (obj->rect.y >= 3*SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_UP;
 				}
 				else if (obj->vert_mov == FALLING) {
 					obj->rect.y += 4;
 				}
-				}
+				
 				if (state->info.ball->vert_mov == IDLE) {
 					if (state->info.ball->rect.x >= obj->rect.x 
 					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x
@@ -220,6 +219,9 @@ void state_update(State state, KeyState keys) {
 				&& obj->type == PLATFORM) {
 					state->info.ball->vert_mov = IDLE;
 					state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
+					if (obj->unstable) {
+						obj->vert_mov = FALLING;
+					}
 					}
 			i++;
 		}
