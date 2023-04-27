@@ -157,13 +157,13 @@ void state_update(State state, KeyState keys) {
 			state->info.ball->vert_mov = JUMPING;
 			state->info.ball->vert_speed = SPEED * 17;
 		}
-		else if (state->info.ball->vert_mov == JUMPING) {
+	    if (state->info.ball->vert_mov == JUMPING) {
 			state->info.ball->rect.y -= state->info.ball->vert_speed;
 			state->info.ball->vert_speed = SPEED * 85/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed <= 0.5) 
 				state->info.ball->vert_mov = FALLING;
 		}
-		else if (state->info.ball->vert_mov == FALLING) {
+		if (state->info.ball->vert_mov == FALLING) {
 			state->info.ball->rect.y += state->info.ball->vert_speed;
 			state->info.ball->vert_speed += SPEED * 10/100 * state->info.ball->vert_speed;
 			if (state->info.ball->vert_speed > 7) 
@@ -191,7 +191,7 @@ void state_update(State state, KeyState keys) {
 					if (state->info.ball->rect.x >= obj->rect.x 
 					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x
 					    && state->info.ball->rect.y == obj->rect.y) 
-						state->info.ball->rect.y = obj->rect.y;
+						state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
 
 					else {
 						state->info.ball->vert_mov = FALLING;
