@@ -140,7 +140,7 @@ List state_objects(State state, float x_from, float x_to) {
 	Pointer To = create_float(x_to);
 	Object obj_from = set_find_eq_or_greater(state->objects, From);
 	Object obj_to = set_find_eq_or_smaller(state->objects, To);
-	SetNode node = set_first(state->objects);
+	SetNode node = set_find_node(state->objects, obj_from);
 	while (node != set_node_value(state->objects, set_find_node(state->objects, obj_to))) {
 		Object obj = set_node_value(state->objects, node);
 		node = set_next(state->objects, node);
@@ -238,7 +238,7 @@ void state_update(State state, KeyState keys) {
 				}
 		}
 		Object last_platform = set_node_value(state->objects, set_last(state->objects));
-		
+
 		if (last_platform->rect.x - state->info.ball->rect.x <= SCREEN_WIDTH) {
 			add_objects(state, last_platform->rect.x);
 			state->speed_factor += 10/100 * state->speed_factor;
