@@ -1,9 +1,10 @@
 
 #include <stdlib.h>
-
+#include "set_utils.h"
 #include "ADTVector.h"
 #include "ADTList.h"
 #include "state.h"
+#include "ADTSet.h"
 
 
 // Οι ολοκληρωμένες πληροφορίες της κατάστασης του παιχνιδιού.
@@ -11,11 +12,20 @@
 // δεν είναι ορατό στον χρήστη.
 
 struct state {
-	Vector objects;			// περιέχει στοιχεία Object (Πλατφόρμες, Αστέρια)
+	Set objects;			// περιέχει στοιχεία Object (Πλατφόρμες, Αστέρια)
 	struct state_info info;	// Γενικές πληροφορίες για την κατάσταση του παιχνιδιού
 	float speed_factor;		// Πολλαπλασιαστής ταχύτητς (1 = κανονική ταχύτητα, 2 = διπλάσια, κλπ)
 };
 
+int compare_ints(Pointer a, Pointer b){
+    return *(int*)a - *(int*)b;
+}
+
+float* create_float(float value) {
+	float* pointer = malloc(sizeof(float));	
+	*pointer = value;						
+	return pointer;
+}
 
 // Δημιουργεί και επιστρέφει ένα αντικείμενο
 
@@ -63,7 +73,7 @@ static void add_objects(State state, float start_x) {
 			0.6 + 3*(rand()%100)/100,							// ταχύτητα τυχαία στο διάστημα [0.6, 3.6]
 			i > 0 && (rand() % 10) == 0							// το 10% (τυχαία) των πλατφορμών είναι ασταθείς (εκτός από την πρώτη)
 		);
-		vector_insert_last(state->objects, platform);
+		set_insert(state->objects, platform);
 
 		// Στο 50% των πλατφορμών (τυχαία), εκτός της πρώτης, προσθέτουμε αστέρι
 		if(i != 0 && rand() % 2 == 0) {
@@ -76,7 +86,7 @@ static void add_objects(State state, float start_x) {
 				0,										 	// ταχύτητα 0
 				false										// 'unstable' πάντα false για τα αστέρια
 			);
-			vector_insert_last(state->objects, star);
+			set_insert(state->objects, star);
 		}
 
 		start_x = platform->rect.x + platform->rect.width;	// μετακίνηση των επόμενων αντικειμένων προς τα δεξιά
@@ -97,11 +107,11 @@ State state_create() {
 
 	// Δημιουργούμε το vector των αντικειμένων, και προσθέτουμε αντικείμενα
 	// ξεκινώντας από start_x = 0.
-	state->objects = vector_create(0, NULL);
+	state->objects = set_create(compare_ints, NULL);
 	add_objects(state, 0);
 
 	// Δημιουργούμε την μπάλα τοποθετώντας τη πάνω στην πρώτη πλατφόρμα
-	Object first_platform = vector_get_at(state->objects, 0);
+	Object first_platform = set_find(state->objects, 0);
 	state->info.ball = create_object(
 		BALL,
 		first_platform->rect.x,			// x στην αρχή της πλατφόρμας
@@ -126,14 +136,18 @@ StateInfo state_info(State state) {
 
 List state_objects(State state, float x_from, float x_to) {
 	List result = list_create(NULL);
-	for (int i = 0; i < vector_size(state->objects); i++) {
-
-		Object obj = vector_get_at(state->objects, i);
-		if(obj->rect.x >= x_from && obj->rect.x <= x_to) 
-			list_insert_next(result, LIST_BOF, obj);
-
+	Pointer From = create_float(x_from);
+	Pointer To = create_float(x_to);
+	Object obj_from = set_find_eq_or_greater(state->objects, From);
+	Object obj_to = set_find_eq_or_smaller(state->objects, To);
+	SetNode node = set_first(state->objects);
+	while (node != set_node_value(state->objects, set_find_node(state->objects, obj_to))) {
+		Object obj = set_node_value(state->objects, node);
+		node = set_next(state->objects, node);
+		list_insert_next(result, LIST_BOF, obj);
 	}
-
+	free(From);
+	free(To);
 	return result;
 }
 
@@ -169,9 +183,14 @@ void state_update(State state, KeyState keys) {
 			if (state->info.ball->vert_speed > 7) 
 				state->info.ball->vert_speed = SPEED * 7;
 		}
-
-		for (int i = 0; i < vector_size(state->objects); i++) {
-			Object obj = vector_get_at(state->objects, i);
+		Pointer From = create_float(state->info.ball->rect.x);
+	    Pointer To = create_float(state->info.ball->rect.x + 2 * SCREEN_WIDTH);
+		Object obj_from = set_find_eq_or_greater(state->objects, From);
+		Object obj_to = set_find_eq_or_smaller(state->objects, To);
+		SetNode node = set_first(state->objects);
+		while (node != set_node_value(state->objects, set_find_node(state->objects, obj_to))) {
+			Object obj = set_node_value(state->objects, node);
+			node = set_next(state->objects, node);
 			if (obj->type == PLATFORM) {
 				if (obj->vert_mov == MOVING_UP) {
 					obj->rect.y -= obj->vert_speed;
@@ -190,47 +209,36 @@ void state_update(State state, KeyState keys) {
 				if (state->info.ball->vert_mov == IDLE) {
 					if (state->info.ball->rect.x >= obj->rect.x 
 					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x
-					    && state->info.ball->rect.y == obj->rect.y) 
+					    && state->info.ball->rect.y == obj->rect.y) {
 						state->info.ball->rect.y = obj->rect.y;
-
+					}
 					else {
 						state->info.ball->vert_mov = FALLING;
 						state->info.ball->vert_speed = SPEED * 1.5;
 					}
 				}
 			}
-		}
-		int i = 0;
-		while (i < vector_size(state->objects)) {
-			Object obj = vector_get_at(state->objects, i);
-			if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
-				&& obj->type == STAR) {
-					Object swap = vector_get_at(state->objects, vector_size(state->objects) - 1);
-					vector_set_at(state->objects, i, swap);
-					vector_remove_last(state->objects);
-					state->info.score += 10;
-				}
 			if (obj->type == PLATFORM && obj->rect.y >= SCREEN_HEIGHT) {
-					Object swap = vector_get_at(state->objects, vector_size(state->objects) - 1);
-					vector_set_at(state->objects, i, swap);
-					vector_remove_last(state->objects);
+				set_remove(state->objects, set_node_value(state->objects, node));
 			}
-			if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
-				&& obj->type == PLATFORM) {
-					state->info.ball->vert_mov = IDLE;
-					state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
-					if (obj->unstable) {
-						obj->vert_mov = FALLING;
-					}
-					}
-			i++;
 		}
-		Object last_platform = vector_get_at(state->objects, 0);
-		for (i = 1; i < vector_size(state->objects); i++) {
-			Object plat = vector_get_at(state->objects, i);
-			if (last_platform->rect.x < plat->rect.x) 
-				last_platform = plat;
+		Object obj = set_find(state->objects, obj_from);
+		if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
+			&& obj->type == STAR) {
+				set_remove(state->objects, From);
+				state->info.score += 10;
+			}
+		
+		if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
+			&& obj->type == PLATFORM) {
+				state->info.ball->vert_mov = IDLE;
+				state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
+				if (obj->unstable) {
+					obj->vert_mov = FALLING;
+				}
 		}
+		Object last_platform = set_node_value(state->objects, set_last(state->objects));
+		
 		if (last_platform->rect.x - state->info.ball->rect.x <= SCREEN_WIDTH) {
 			add_objects(state, last_platform->rect.x);
 			state->speed_factor += 10/100 * state->speed_factor;
@@ -239,7 +247,8 @@ void state_update(State state, KeyState keys) {
 			state->info.playing = false;
 		}
 			
-		
+	free(From);
+	free(To);
 	} 
 	if (state->info.playing && keys->p) {
 		state->info.playing = false;
@@ -252,6 +261,7 @@ void state_update(State state, KeyState keys) {
 	if (state->info.paused && keys->n) {
 		state_update(state, keys);
 	}
+	
 	
 }
 
