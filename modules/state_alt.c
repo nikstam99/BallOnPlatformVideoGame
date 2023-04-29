@@ -21,6 +21,14 @@ int compare_ints(Pointer a, Pointer b){
     return *(int*)a - *(int*)b;
 }
 
+int compare_x(Pointer a, Pointer b) {
+	Object A = a;
+	Object B = b;
+	int a_int = A->rect.x;
+	int b_int = B->rect.x;
+	return a_int - b_int;
+}
+
 float* create_float(float value) {
 	float* pointer = malloc(sizeof(float));	
 	*pointer = value;						
@@ -107,7 +115,7 @@ State state_create() {
 
 	// Δημιουργούμε το vector των αντικειμένων, και προσθέτουμε αντικείμενα
 	// ξεκινώντας από start_x = 0.
-	state->objects = set_create(compare_ints, NULL);
+	state->objects = set_create(compare_x, NULL);
 	add_objects(state, 0);
 
 	// Δημιουργούμε την μπάλα τοποθετώντας τη πάνω στην πρώτη πλατφόρμα
