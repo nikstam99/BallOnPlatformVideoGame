@@ -258,42 +258,60 @@ void state_update(State state, KeyState keys) {
 
 					// Το σκορ αυξάνεται κατά 10.
 					state->info.score += 10;
-				}
+			}
+			// Αν η συντεταγμένη y της πλατφόρμας περάσει το SCREEN_HEIGHT, τότε αυτή
+			// αφαιρείται από το Vector.
 			if (obj->type == PLATFORM && obj->rect.y >= SCREEN_HEIGHT) {
 					Object swap = vector_get_at(state->objects, vector_size(state->objects) - 1);
 					vector_set_at(state->objects, i, swap);
 					vector_remove_last(state->objects);
 			}
+			// Αν η μπάλα συγκρουστεί με πλατφόρμα, μπαίνει σε κατάσταση IDLE
+			// και ακολουθεί σε ύψος την πλατφόρμα.
 			if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
 				&& obj->type == PLATFORM) {
 					state->info.ball->vert_mov = IDLE;
 					state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
+
+					// Αν η πλατφόρμα είναι unstable τότε με την σύγκρουση μπαίνει σε κατάσταση FALLING. 
 					if (obj->unstable) {
 						obj->vert_mov = FALLING;
 					}
-					}
+			}
 			i++;
 		}
+		// Αρχικοποιούμε την τελευταία πλατφόρμα.
 		Object last_platform = vector_get_at(state->objects, 0);
+
+		// Διατρέχουμε το Vector για να βρούμε την τελευταία πλατφόρμα.
 		for (i = 1; i < vector_size(state->objects); i++) {
 			Object plat = vector_get_at(state->objects, i);
 			if (last_platform->rect.x < plat->rect.x) 
 				last_platform = plat;
 		}
+
+		// Όταν η μπάλα βρεθεί σε απόσταση μιας οθόνης από την τελευταία πλατφόρμα,
+		// προσθέτουμε αντικείμενα στην πίστα και αυξάνουμε την ταχύτητα παιχνιδιού κατά 10%.
 		if (last_platform->rect.x - state->info.ball->rect.x <= SCREEN_WIDTH) {
 			add_objects(state, last_platform->rect.x);
 			state->speed_factor += 10/100 * state->speed_factor;
 		}
+
+		// Αν η συντεταγμένη y της μπάλας βρεθεί κάτω από το SCREEN_HEIGHT, το παιχνίδι τελειώνει.
 		if (state->info.ball->rect.y >= SCREEN_HEIGHT) {
 			state->info.playing = false;
 		}
 			
 		
 	} 
+
+	// Αν κατά την διάρκεια του παιχνιδιού πατηθεί το p, το παιχνλιδι μπαίνει σε pause mode.
 	if (state->info.playing && keys->p) {
 		state->info.playing = false;
 		state->info.paused = true;
 	}
+
+	// Αν πατηθεί το enter σε pause mode, το παιχνίδι συνεχίζει.
 	if (keys->enter && state->info.paused){
 		state->info.playing = true;
 		state->info.paused = false;
