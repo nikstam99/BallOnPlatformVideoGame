@@ -143,26 +143,39 @@ List state_objects(State state, float x_from, float x_to) {
 void state_update(State state, KeyState keys) {
 	float SPEED = state->speed_factor;
 	if (state->info.playing) {
-		
-		if (keys->right)						// Αν είναι πατημένο το δεξί βελάκι,
-			state->info.ball->rect.x += 6;		// η μπάλα μετακινείται 6 pixels δεξιά.
 
-		else if (keys->left)					// Αν είναι πατημένο το αριστερό βελάκι,
-			state->info.ball->rect.x += 1;		// η μπάλα μετακινείται 1 pixel δεξιά.
+		// Αν είναι πατημένο το δεξί βελάκι, η μπάλα μετακινείται 6 pixels δεξιά.
+		if (keys->right)						
+			state->info.ball->rect.x += 6;		
 
-		else if (!keys->left && !keys->right)									// Αν δεν είναι πατημένο κανένα βελάκι,
-			state->info.ball->rect.x += 4;		// η μπάλα μετακινείται 4 pixel δεξιά.
+		// Αν είναι πατημένο το αριστερό βελάκι, η μπάλα μετακινείται 1 pixel δεξιά.
+		else if (keys->left)					
+			state->info.ball->rect.x += 1;	
 
-		if (state->info.ball->vert_mov == IDLE && keys->up) {
-			state->info.ball->vert_mov = JUMPING;
-			state->info.ball->vert_speed = SPEED * 17;
+		// Αν δεν είναι πατημένο κανένα βελάκι, η μπάλα μετακινείται 4 pixel δεξιά.
+		else if (!keys->left && !keys->right)	
+			state->info.ball->rect.x += 4;	
+
+		// Αν η μπάλα βρίσκεται σε κατάσταση IDLE και είναι πατημένο 
+		// το πάνω βέλος μπαίνει σε κατάσταση JUMPING με αρχικη κατακόρυφη ταχύτητα 17.
+		if (state->info.ball->vert_mov == IDLE && keys->up) {	
+			state->info.ball->vert_mov = JUMPING;				
+			state->info.ball->vert_speed = SPEED * 17;			
 		}
+
+		// Αν η μπάλα βρίσκεται σε κατάσταση JUMPING τότε μετακινείται προς τα πάνω 
+		// τόσα pixels όση η κατακόρυφη ταχύτητά της.
+		// Η κατακόρυφη ταχύτητα μειώνεται κατά 15% σε κάθε frame.
 	    if (state->info.ball->vert_mov == JUMPING) {
 			state->info.ball->rect.y -= state->info.ball->vert_speed;
 			state->info.ball->vert_speed = SPEED * 85/100 * state->info.ball->vert_speed;
-			if (state->info.ball->vert_speed <= 0.5) 
-				state->info.ball->vert_mov = FALLING;
+			if (state->info.ball->vert_speed <= 0.5)  // Αν η ταχύτητα γίνει μικρότερη απο 0.5
+				state->info.ball->vert_mov = FALLING; // η μπάλα μπαίνει σε κατάσταση FALLING.
 		}
+
+		// Αν η μπάλα είναι σε κατάσταση FALLING τότε μετακινείται προς τα κάτω
+		// τόσα pixels όση η κατακόρυφη ταχύτητά της.
+		// Η κατακόρυφη ταχύτητα αυξάνεται κατά 10% σε κάθε frame με μέγιστη ταχύτητα 7.
 		if (state->info.ball->vert_mov == FALLING) {
 			state->info.ball->rect.y += state->info.ball->vert_speed;
 			state->info.ball->vert_speed += SPEED * 10/100 * state->info.ball->vert_speed;
@@ -170,29 +183,53 @@ void state_update(State state, KeyState keys) {
 				state->info.ball->vert_speed = SPEED * 7;
 		}
 
+		// Διατρέχουμε το Vector των αντικειμένων για να ρυθμίσουμε την κίνηση τους.
 		for (int i = 0; i < vector_size(state->objects); i++) {
 			Object obj = vector_get_at(state->objects, i);
+
+			// Βρίσκουμε τα αντικείμενα που είναι πλατφόρμες.
 			if (obj->type == PLATFORM) {
+
+				// Αν η κατάσταση της πλατφόρμας είναι MOVING_UP, 
+				// τότε αυτή μετακινείται προς τα πάνω όση η κατακόρυφη ταχύτητά της.
 				if (obj->vert_mov == MOVING_UP) {
 					obj->rect.y -= obj->vert_speed;
+
+					// Αν η θέση της πλατφόρμας στον άξονα y υπερβεί το SCREEN_HEIGHT/4,
+					// τότε η κίνησή της γίνεται MOVING_DOWN.
 					if (obj->rect.y <= SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_DOWN;
 				}
+
+				// Αν η κατάσταση της πλατφόρμας είναι MOVING_DOWN, 
+				// τότε αυτή μετακινείται προς τα κάτω όση η κατακόρυφη ταχύτητά της.
 				else if (obj->vert_mov == MOVING_DOWN) {
 					obj->rect.y += obj->vert_speed;
+
+					// Αν η θέση της πλατφόρμας στον άξονα y υπερβεί το 3*SCREEN_HEIGHT/4,
+					// τότε η κίνησή της γίνεται MOVING_UP.
 					if (obj->rect.y >= 3*SCREEN_HEIGHT/4)
 						obj->vert_mov = MOVING_UP;
 				}
+
+				// Αν η κατάσταση της πλατφόρμας είναι FALLING (unstable),
+				// τότε αυτή πέφτει 4 pixels προς τα κάτω.
 				else if (obj->vert_mov == FALLING) {
 					obj->rect.y += 4;
 				}
-				
+				// Αν η κατάσταση της μπάλας είναι IDLE και οι συντεταγμένες της είναι ανάμεσα
+				// στις αντίστοιχες της πλατφόρμας, τότε η μπάλα ακολουθεί σε ύψος την πλατφόρμα.
 				if (state->info.ball->vert_mov == IDLE) {
 					if (state->info.ball->rect.x >= obj->rect.x 
 					    && state->info.ball->rect.x <= obj->rect.width + obj->rect.x
 					    && state->info.ball->rect.y == obj->rect.y) 
+						
+						// Από την συντεταγμένη y της μπάλας αφαιρείται το ύψος για να τοποθετείται
+						// πάνω στην πλατφόρμα στο interface. 
 						state->info.ball->rect.y = obj->rect.y - state->info.ball->rect.height;
 
+					// Αν η μπάλα δεν βρίσκεται πάνω σε πλατφόρμα, τότε μπαίνει σε κατάσταση FALLING
+					// με αρχική ταχύτητα 1.5
 					else {
 						state->info.ball->vert_mov = FALLING;
 						state->info.ball->vert_speed = SPEED * 1.5;
@@ -200,14 +237,26 @@ void state_update(State state, KeyState keys) {
 				}
 			}
 		}
+
+		// Διατρέχουμε το Vector των αντικειμένων για να ελέγξουμε τις συγκρούσεις. 
 		int i = 0;
 		while (i < vector_size(state->objects)) {
 			Object obj = vector_get_at(state->objects, i);
+
+			// Αν η μπάλα συγκρουστεί με αστέρι, τότε αυτό αφαιρείται απο το Vector.
 			if (CheckCollisionRecs(state->info.ball->rect, obj->rect)
 				&& obj->type == STAR) {
+
+					// Παίρνουμε το τελευταίο αντικείμενο του Vector.
 					Object swap = vector_get_at(state->objects, vector_size(state->objects) - 1);
+
+					// Αντικαθιστούμε το αστέρι με το τελευταίο αντικείμενο.
 					vector_set_at(state->objects, i, swap);
+
+					// Αφαιρούμε το τελευταίο αντικείμενο από το Vector.
 					vector_remove_last(state->objects);
+
+					// Το σκορ αυξάνεται κατά 10.
 					state->info.score += 10;
 				}
 			if (obj->type == PLATFORM && obj->rect.y >= SCREEN_HEIGHT) {
