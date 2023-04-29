@@ -28,26 +28,34 @@ void interface_draw_frame(State state){
 
     // Καθαρισμός, θα τα σχεδιάσουμε όλα από την αρχή
     ClearBackground(RAYWHITE);
-
-    // Σχεδιάζουμε την μπάλα
+    
     StateInfo info = state_info(state);
+
+    // κρατάμε σε μια μεταβλητή το offset για να ακολουθεί την μπάλα η οθόνη.
     float ball_x = info->ball->rect.x;
     float x_offset = SCREEN_WIDTH - 700 - ball_x;
 
+    // Σχεδιάζουμε την μπάλα
     DrawTexture(ball_img, ball_x + x_offset, info->ball->rect.y, WHITE);
     
-
+    // Καλούμε την συνάρτηση state_objects για να φτιάξουμε την λίστα με τα αντικείμενα.
     List objs = state_objects(state, ball_x - SCREEN_WIDTH, ball_x + SCREEN_WIDTH);
 
+    // Διατρέχουμε την λίστα για να σχεδιάσουμε τα αντικείμενα.
     for (ListNode node = list_first(objs);
          node != LIST_EOF;
          node = list_next(objs, node)) {
                 Object obj = list_node_value(objs, node);
+
+                // Σχεδιάζουμε τις stable πλατφόρμες.
                  if (obj->type == PLATFORM && !obj->unstable)
-                 //DrawTexture(platform_img, obj->rect.x + x_offset, obj->rect.y, WHITE);
                  DrawRectangle(obj->rect.x + x_offset, obj->rect.y, obj->rect.width, obj->rect.height, BLUE);
+
+                 // Σχεδιάζουμε τα αστέρια.
                  else if (obj->type == STAR) 
                  DrawTexture(star_img, obj->rect.x + x_offset, obj->rect.y, WHITE);
+
+                 // Σχεδιάζουμε τις unstable πλατφόρμες.
                  else if (obj->unstable) 
                  DrawRectangle(obj->rect.x + x_offset, obj->rect.y, obj->rect.width, obj->rect.height,  RED);
 
@@ -64,6 +72,8 @@ void interface_draw_frame(State state){
 			 GetScreenHeight() / 2 - 50, 20, GRAY
 		);
 	}
+
+    // Αν το παιχνίδι είναι σε pause mode, σχεδιάζουμε μήνυμα για να συνεχίσει.
     if (info->paused) {
         DrawText(
 			" PAUSED | PRESS [ENTER] TO CONTINUE",
