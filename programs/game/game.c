@@ -23,6 +23,13 @@ void update_and_draw() {
 		state_info(state)->playing = false;
 		state_info(state)->paused = true;
 	}
+	else if (state_info(state)->paused && keys.n) {
+		state_info(state)->playing = true;
+		state_info(state)->paused = false;
+		state_update(state, &keys);
+		state_info(state)->playing = false;
+		state_info(state)->paused = true;
+	}
 	state_update(state, &keys);
 	interface_draw_frame(state);
 }

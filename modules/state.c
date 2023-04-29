@@ -249,9 +249,6 @@ void state_update(State state, KeyState keys) {
 		state->info.playing = true;
 		state->info.paused = false;
 	}
-	if (state->info.paused && keys->n) {
-		state_update(state, keys);
-	}
 	
 }
 
