@@ -1,16 +1,19 @@
 #include "acutest.h"
 #include "set_utils.h"
 
+// Συνάρτηση που δέχεται ακέραιο και επιστρέφει δείκτη σε αυτόν.
 int* create_int(int value) {
 	int* pointer = malloc(sizeof(int));	
 	*pointer = value;						
 	return pointer;
 }
 
+// Συνάρτηση που συγκρίνει 2 pointers.
 int compare_ints(Pointer a, Pointer b){
     return *(int*)a - *(int*)b;
 }
 
+// Έλεγχος για την λειτουργηκότητα των συναρτήσεων του set_utils.c
 void void_test_set_func() {
     Pointer val;
     Set set = set_create(compare_ints, free);
